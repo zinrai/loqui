@@ -133,7 +133,7 @@ If you have many labels and values, enable caching for faster selection:
 $ loqui -cache
 ```
 
-Note: Cache is read from `~/.cache/loqui/labels.json` if it exists. Use a [loqui-cache](https://github.com/zinrai/loqui-cache) to manage the cache.
+Note: Cache is read from `~/.cache/loqui/labels.json` if it exists. Use a [loki-index-dump](https://github.com/zinrai/loki-index-dump) to manage the cache.
 
 ## License
 
