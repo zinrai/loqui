@@ -21,11 +21,14 @@ type LineFilter struct {
 }
 
 func InteractiveQueryBuilder(config *Config) error {
-	// 1. Select time range
+	// 1. Select time range (FIRST - to use for label queries)
 	timeArgs, err := selectTimeRange()
 	if err != nil {
 		return fmt.Errorf("time range selection failed: %w", err)
 	}
+
+	// Set timeArgs in config for use in label queries
+	config.TimeArgs = timeArgs
 
 	// 2. Select labels
 	selectors, err := selectLabels(config)

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	version = "0.1.0"
+	version = "0.2.0"
 	usage   = `loqui - Interactive Loki Query Builder
 
 Usage:
@@ -19,8 +19,13 @@ Options:
   -version     Show version
   -cache       Enable cache usage (default: disabled)
 
+Environment:
+  LOKI_ADDR    Loki server address (required)
+               Example: htp://localhost:3100
+
 Examples:
-  # Interactive query building
+  # Set Loki address and run interactive query building
+  export LOKI_ADDR=http://localhost:3100
   $(loqui)
 
   # Build query using cache
@@ -32,6 +37,7 @@ type Config struct {
 	UseCache  bool
 	CacheDir  string
 	LogCLICmd string
+	TimeArgs  []string // Added to store time range arguments
 }
 
 func main() {
@@ -61,10 +67,20 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Check LOKI_ADDR environment variable
+	lokiAddr := os.Getenv("LOKI_ADDR")
+	if lokiAddr == "" {
+		fmt.Fprintf(os.Stderr, "Error: LOKI_ADDR environment variable is not set\n")
+		fmt.Fprintf(os.Stderr, "Please set it to your Loki server address\n")
+		fmt.Fprintf(os.Stderr, "Example: export LOKI_ADDR=http://localhost:3100\n")
+		os.Exit(1)
+	}
+
 	config := &Config{
 		UseCache:  useCache,
 		CacheDir:  getDefaultCacheDir(),
 		LogCLICmd: "logcli",
+		TimeArgs:  []string{}, // Initialize as empty, will be set in InteractiveQueryBuilder
 	}
 
 	// Run interactive mode

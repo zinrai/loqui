@@ -27,20 +27,28 @@ func getLabels(config *Config) ([]string, error) {
 		// If cache fails, fall back to logcli
 	}
 
-	// Get from logcli
-	return getLabelsFromLogCLI(config.LogCLICmd)
+	// Get from logcli with time range
+	return getLabelsFromLogCLI(config.LogCLICmd, config.TimeArgs)
 }
 
 // getLabelsFromLogCLI executes logcli to get labels
-func getLabelsFromLogCLI(logcliCmd string) ([]string, error) {
-	cmd := exec.Command(logcliCmd, "labels")
-	output, err := cmd.Output()
+func getLabelsFromLogCLI(logcliCmd string, timeArgs []string) ([]string, error) {
+	args := []string{"labels"}
+	args = append(args, timeArgs...)
+
+	cmd := exec.Command(logcliCmd, args...)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("logcli labels failed: %w", err)
+		return nil, fmt.Errorf("logcli labels failed: %w\nOutput: %s", err, string(output))
 	}
 
+	return parseLabelsOutput(string(output))
+}
+
+// parseLabelsOutput parses the output of 'logcli labels' command
+func parseLabelsOutput(output string) ([]string, error) {
 	labels := []string{}
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
+	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line != "" && !strings.HasPrefix(line, "http") {
@@ -68,20 +76,28 @@ func getLabelValues(config *Config, label string) ([]string, error) {
 		// If cache fails, fall back to logcli
 	}
 
-	// Get from logcli
-	return getLabelValuesFromLogCLI(config.LogCLICmd, label)
+	// Get from logcli with time range
+	return getLabelValuesFromLogCLI(config.LogCLICmd, label, config.TimeArgs)
 }
 
 // getLabelValuesFromLogCLI executes logcli to get label values
-func getLabelValuesFromLogCLI(logcliCmd string, label string) ([]string, error) {
-	cmd := exec.Command(logcliCmd, "labels", label)
-	output, err := cmd.Output()
+func getLabelValuesFromLogCLI(logcliCmd string, label string, timeArgs []string) ([]string, error) {
+	args := []string{"labels", label}
+	args = append(args, timeArgs...)
+
+	cmd := exec.Command(logcliCmd, args...)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("logcli labels %s failed: %w", label, err)
+		return nil, fmt.Errorf("logcli labels %s failed: %w\nOutput: %s", label, err, string(output))
 	}
 
+	return parseLabelValuesOutput(string(output))
+}
+
+// parseLabelValuesOutput parses the output of 'logcli labels <label>' command
+func parseLabelValuesOutput(output string) ([]string, error) {
 	values := []string{}
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
+	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line != "" && !strings.HasPrefix(line, "http") {
