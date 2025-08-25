@@ -32,7 +32,7 @@ Working with Loki's `logcli` is powerful but comes with significant cognitive ov
 - Converting human-friendly time formats to RFC3339 automatically
 - Showing only available options at each step
 - Sensible defaults - just press Enter to skip optional features
-- Generating the correct `logcli` command for you
+- Generating the correct `logcli` command or executing it directly with `-exec`
 
 ## Installation
 
@@ -46,6 +46,8 @@ $ go install github.com/yourusername/loqui@latest
 - [fzf](https://github.com/junegunn/fzf)
 
 ## Usage
+
+### Generate Command (Default)
 
 ```bash
 $ export LOKI_ADDR=http://localhost:3100
@@ -101,6 +103,42 @@ Enter filter text: error
 logcli query '{app="nginx",env="production"} |= "error"' --from 2025-08-14T09:00:00+09:00 --to 2025-08-14T18:00:00+09:00
 ```
 
+### Execute Directly
+
+```bash
+# Execute the query immediately instead of generating command
+$ loqui -exec
+
+# [Interactive selection same as above...]
+
+# Direct output of logs:
+2025-08-14T10:00:00+09:00 nginx: [error] connection refused
+2025-08-14T10:00:01+09:00 nginx: [error] timeout occurred
+...
+```
+
+### Examples
+
+```bash
+# Generate command for later use or modification
+$ loqui
+
+# Execute in a subshell (traditional way)
+$ $(loqui)
+
+# Execute directly with -exec flag
+$ loqui -exec
+
+# Pipe the results
+$ loqui -exec | grep ERROR
+
+# Use with pager
+$ loqui -exec | less
+
+# Use with cache for faster label selection
+$ loqui -cache -exec
+```
+
 ## Time Format Support
 
 Instead of remembering RFC3339 format, use natural formats:
@@ -115,6 +153,7 @@ Instead of remembering RFC3339 format, use natural formats:
 -help        Show help message
 -version     Show version
 -cache       Enable label cache (faster but might show stale labels)
+-exec        Execute the command immediately
 ```
 
 ## How It Works
@@ -124,7 +163,7 @@ Instead of remembering RFC3339 format, use natural formats:
 3. **Smart Value Selection**: For each label, see only the values that actually exist
 4. **Operator Support**: Not just equality - supports `!=`, `=~`, and `!~` for advanced queries
 5. **Line Filters**: Optional - press Enter to skip
-6. **Command Generation**: Outputs a ready-to-run `logcli` command
+6. **Command Generation or Execution**: Outputs a ready-to-run `logcli` command or executes it directly with `-exec`
 
 ## Using Cache for Label and Label value
 

@@ -42,9 +42,24 @@ func InteractiveQueryBuilder(config *Config) error {
 		return fmt.Errorf("line filter selection failed: %w", err)
 	}
 
-	// 4. Build and output command
-	command := buildLogCLICommand(config.LogCLICmd, selectors, lineFilter, timeArgs)
-	fmt.Println(command)
+	// 4. Build command arguments
+	args := buildLogCLIArgs(config.LogCLICmd, selectors, lineFilter, timeArgs)
+
+	// 5. Execute or output command
+	if config.Execute {
+		// Execute mode
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("execution failed: %w", err)
+		}
+	} else {
+		// Output mode (default)
+		fmt.Println(formatAsShellCommand(args))
+	}
 
 	return nil
 }
@@ -343,7 +358,7 @@ func selectWithFzf(items []string, prompt string) (string, error) {
 	return selected, nil
 }
 
-func buildLogCLICommand(logcliCmd string, selectors []LabelSelector, lineFilter *LineFilter, timeArgs []string) string {
+func buildLogCLIArgs(logcliCmd string, selectors []LabelSelector, lineFilter *LineFilter, timeArgs []string) []string {
 	// Build LogQL query
 	query := "{"
 	for i, s := range selectors {
@@ -358,9 +373,22 @@ func buildLogCLICommand(logcliCmd string, selectors []LabelSelector, lineFilter 
 		query += fmt.Sprintf(" %s \"%s\"", lineFilter.Operator, lineFilter.Text)
 	}
 
-	// Build command
-	parts := []string{logcliCmd, "query", fmt.Sprintf("'%s'", query)}
-	parts = append(parts, timeArgs...)
+	// Build command arguments
+	args := []string{logcliCmd, "query", query}
+	args = append(args, timeArgs...)
 
-	return strings.Join(parts, " ")
+	return args
+}
+
+func formatAsShellCommand(args []string) string {
+	// Create a copy to avoid modifying the original
+	quotedArgs := make([]string, len(args))
+	copy(quotedArgs, args)
+
+	// Add single quotes around the query (3rd argument)
+	if len(quotedArgs) > 2 {
+		quotedArgs[2] = "'" + quotedArgs[2] + "'"
+	}
+
+	return strings.Join(quotedArgs, " ")
 }

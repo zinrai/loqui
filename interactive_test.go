@@ -1,18 +1,18 @@
 package main
 
 import (
-	"strings"
+	"reflect"
 	"testing"
 )
 
-func TestBuildLogCLICommand(t *testing.T) {
+func TestBuildLogCLIArgs(t *testing.T) {
 	tests := []struct {
 		name       string
 		logcliCmd  string
 		selectors  []LabelSelector
 		lineFilter *LineFilter
 		timeArgs   []string
-		want       []string // Expected parts in the command
+		want       []string
 	}{
 		{
 			name:      "single label with equals",
@@ -22,7 +22,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcli", "query", `'{app="nginx"}'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{app="nginx"}`, "--since", "1h"},
 		},
 		{
 			name:      "multiple labels",
@@ -33,7 +33,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--since", "2h"},
-			want:       []string{"logcli", "query", `'{app="nginx",env!="test"}'`, "--since", "2h"},
+			want:       []string{"logcli", "query", `{app="nginx",env!="test"}`, "--since", "2h"},
 		},
 		{
 			name:      "with line filter contains",
@@ -43,7 +43,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: &LineFilter{Operator: "|=", Text: "error"},
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcl", "query", `'{app="nginx"} |= "error"'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{app="nginx"} |= "error"`, "--since", "1h"},
 		},
 		{
 			name:      "with line filter not contains",
@@ -53,7 +53,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: &LineFilter{Operator: "!=", Text: "debug"},
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcli", "query", `'{app="nginx"} != "debug"'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{app="nginx"} != "debug"`, "--since", "1h"},
 		},
 		{
 			name:      "with line filter regex match",
@@ -63,7 +63,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: &LineFilter{Operator: "|~", Text: `error|warn`},
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcli", "query", `'{app="nginx"} |~ "error|warn"'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{app="nginx"} |~ "error|warn"`, "--since", "1h"},
 		},
 		{
 			name:      "with line filter regex not match",
@@ -73,7 +73,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: &LineFilter{Operator: "!~", Text: `\.(jpg|png|gif)$`},
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcli", "query", `'{app="nginx"} !~ "\.(jpg|png|gif)$"'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{app="nginx"} !~ "\.(jpg|png|gif)$"`, "--since", "1h"},
 		},
 		{
 			name:      "regex operator",
@@ -83,7 +83,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcli", "query", `'{status=~"5\d{2}"}'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{status=~"5\d{2}"}`, "--since", "1h"},
 		},
 		{
 			name:      "regex not match operator",
@@ -93,7 +93,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"logcli", "query", `'{path!~"\.(jpg|png|gif)$"}'`, "--since", "1h"},
+			want:       []string{"logcli", "query", `{path!~"\.(jpg|png|gif)$"}`, "--since", "1h"},
 		},
 		{
 			name:      "absolute time range",
@@ -103,7 +103,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--from", "2025-08-14T00:00:00+09:00", "--to", "2025-08-14T23:59:59+09:00"},
-			want:       []string{"logcli", "query", `'{app="nginx"}'`, "--from", "2025-08-14T00:00:00+09:00", "--to", "2025-08-14T23:59:59+09:00"},
+			want:       []string{"logcli", "query", `{app="nginx"}`, "--from", "2025-08-14T00:00:00+09:00", "--to", "2025-08-14T23:59:59+09:00"},
 		},
 		{
 			name:      "custom logcli command",
@@ -113,7 +113,7 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--since", "1h"},
-			want:       []string{"/usr/local/bin/logcli", "query", `'{app="nginx"}'`, "--since", "1h"},
+			want:       []string{"/usr/local/bin/logcli", "query", `{app="nginx"}`, "--since", "1h"},
 		},
 		{
 			name:      "no line filter when nil",
@@ -123,24 +123,49 @@ func TestBuildLogCLICommand(t *testing.T) {
 			},
 			lineFilter: nil,
 			timeArgs:   []string{"--since", "30m"},
-			want:       []string{"logcli", "query", `'{app="test"}'`, "--since", "30m"},
+			want:       []string{"logcli", "query", `{app="test"}`, "--since", "30m"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := buildLogCLICommand(tt.logcliCmd, tt.selectors, tt.lineFilter, tt.timeArgs)
+			got := buildLogCLIArgs(tt.logcliCmd, tt.selectors, tt.lineFilter, tt.timeArgs)
 
-			// Check if all expected parts are in the command
-			for _, want := range tt.want {
-				if !strings.Contains(got, want) {
-					t.Errorf("buildLogCLICommand() = %v, want to contain %v", got, want)
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("buildLogCLIArgs() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
 
-			// Additional validation: command should be executable
-			if !strings.HasPrefix(got, tt.logcliCmd) {
-				t.Errorf("command should start with logcli command: %v", got)
+func TestFormatAsShellCommand(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{
+			name: "basic query",
+			args: []string{"logcli", "query", `{app="nginx"}`, "--since", "1h"},
+			want: `logcli query '{app="nginx"}' --since 1h`,
+		},
+		{
+			name: "query with line filter",
+			args: []string{"logcli", "query", `{app="nginx"} |= "error"`, "--since", "1h"},
+			want: `logcli query '{app="nginx"} |= "error"' --since 1h`,
+		},
+		{
+			name: "complex query",
+			args: []string{"logcli", "query", `{app="nginx",env!="test"} |~ "error|warn"`, "--from", "2025-08-14T00:00:00+09:00", "--to", "2025-08-14T23:59:59+09:00"},
+			want: `logcli query '{app="nginx",env!="test"} |~ "error|warn"' --from 2025-08-14T00:00:00+09:00 --to 2025-08-14T23:59:59+09:00`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatAsShellCommand(tt.args)
+			if got != tt.want {
+				t.Errorf("formatAsShellCommand() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	version = "0.2.0"
+	version = "0.4.0"
 	usage   = `loqui - Interactive Loki Query Builder
 
 Usage:
@@ -18,10 +18,11 @@ Options:
   -help        Show this help message
   -version     Show version
   -cache       Enable cache usage (default: disabled)
+  -exec        Execute the command immediately
 
 Environment:
   LOKI_ADDR    Loki server address (required)
-               Example: htp://localhost:3100
+               Example: http://localhost:3100
 
 Examples:
   # Set Loki address and run interactive query building
@@ -30,6 +31,9 @@ Examples:
 
   # Build query using cache
   $(loqui -cache)
+
+  # Execute query immediately
+  loqui -exec
 `
 )
 
@@ -38,6 +42,7 @@ type Config struct {
 	CacheDir  string
 	LogCLICmd string
 	TimeArgs  []string // Added to store time range arguments
+	Execute   bool     // Added for -exec option
 }
 
 func main() {
@@ -45,11 +50,13 @@ func main() {
 		showHelp    bool
 		showVersion bool
 		useCache    bool
+		execute     bool
 	)
 
 	flag.BoolVar(&showHelp, "help", false, "Show help")
 	flag.BoolVar(&showVersion, "version", false, "Show version")
 	flag.BoolVar(&useCache, "cache", false, "Enable cache usage")
+	flag.BoolVar(&execute, "exec", false, "Execute the command immediately")
 
 	flag.Usage = func() {
 		fmt.Fprint(os.Stderr, usage)
@@ -81,6 +88,7 @@ func main() {
 		CacheDir:  getDefaultCacheDir(),
 		LogCLICmd: "logcli",
 		TimeArgs:  []string{}, // Initialize as empty, will be set in InteractiveQueryBuilder
+		Execute:   execute,
 	}
 
 	// Run interactive mode
