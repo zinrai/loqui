@@ -31,6 +31,7 @@ Working with Loki's `logcli` is powerful but comes with significant cognitive ov
 - Using `fzf` for interactive label and value selection
 - Converting human-friendly time formats to RFC3339 automatically
 - Showing only available options at each step
+- Sensible defaults - just press Enter to skip optional features
 - Generating the correct `logcli` command for you
 
 ## Installation
@@ -74,7 +75,7 @@ Select value for 'app': nginx
 === Current labels ===
 [SET] app="nginx"
 
-Add more labels? (y/n): y
+Add more labels? (y/N): y
 
 Select label: env
 Select value for 'env': production
@@ -83,9 +84,9 @@ Select value for 'env': production
 [SET] app="nginx"
 [SET] env="production"
 
-Add more labels? (y/n): n
+Add more labels? (y/N): [Enter]
 
-Add line filter? (y/n): y
+Add line filter? (y/N): y
 
 Select line filter operator (default: 1):
 1. |= (contains)
@@ -119,10 +120,10 @@ Instead of remembering RFC3339 format, use natural formats:
 ## How It Works
 
 1. **Time Range First**: Choose between relative (last N hours) or absolute dates
-2. **Interactive Label Selection**: Use `fzf` to search and select from actual labels in your Loki instance
+2. **Interactive Label Selection**: Use `fzf` to search and select from actual labels in your Loki instance (press Enter to skip additional labels)
 3. **Smart Value Selection**: For each label, see only the values that actually exist
 4. **Operator Support**: Not just equality - supports `!=`, `=~`, and `!~` for advanced queries
-5. **Line Filters**: Add grep-like filters after label selection
+5. **Line Filters**: Optional - press Enter to skip
 6. **Command Generation**: Outputs a ready-to-run `logcli` command
 
 ## Using Cache for Label and Label value

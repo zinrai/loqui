@@ -161,7 +161,7 @@ func selectOrInputValue(config *Config, label string, operator string) (string, 
 }
 
 func promptForMoreLabels() (bool, error) {
-	fmt.Print("\nAdd more labels? (y/n): ")
+	fmt.Print("\nAdd more labels? (y/N): ")
 	answer, err := inputText("")
 	if err != nil {
 		return false, err
@@ -171,7 +171,7 @@ func promptForMoreLabels() (bool, error) {
 }
 
 func selectLineFilter() (*LineFilter, error) {
-	fmt.Print("\nAdd line filter? (y/n): ")
+	fmt.Print("\nAdd line filter? (y/N): ")
 	answer, err := inputText("")
 	if err != nil {
 		return nil, err
