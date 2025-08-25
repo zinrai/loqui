@@ -175,6 +175,10 @@ $ loqui -cache
 
 Note: Cache is read from `~/.cache/loqui/labels.json` if it exists. Use a [loki-index-dump](https://github.com/zinrai/loki-index-dump) to manage the cache.
 
+## Notes
+
+For querying specific tenants in multi-tenant Loki environments, refer to the [LogCLI getting started](https://grafana.com/docs/loki/latest/query/logcli/getting-started/)
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit) for details.
