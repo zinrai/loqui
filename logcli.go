@@ -33,7 +33,7 @@ func getLabels(config *Config) ([]string, error) {
 
 // getLabelsFromLogCLI executes logcli to get labels
 func getLabelsFromLogCLI(logcliCmd string, timeArgs []string) ([]string, error) {
-	args := []string{"labels"}
+	args := []string{"labels", "--quiet"}
 	args = append(args, timeArgs...)
 
 	cmd := exec.Command(logcliCmd, args...)
@@ -51,7 +51,7 @@ func parseLabelsOutput(output string) ([]string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if line != "" && !strings.HasPrefix(line, "http") {
+		if line != "" {
 			labels = append(labels, line)
 		}
 	}
@@ -82,7 +82,7 @@ func getLabelValues(config *Config, label string) ([]string, error) {
 
 // getLabelValuesFromLogCLI executes logcli to get label values
 func getLabelValuesFromLogCLI(logcliCmd string, label string, timeArgs []string) ([]string, error) {
-	args := []string{"labels", label}
+	args := []string{"labels", label, "--quiet"}
 	args = append(args, timeArgs...)
 
 	cmd := exec.Command(logcliCmd, args...)
@@ -100,7 +100,7 @@ func parseLabelValuesOutput(output string) ([]string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if line != "" && !strings.HasPrefix(line, "http") {
+		if line != "" {
 			values = append(values, line)
 		}
 	}
