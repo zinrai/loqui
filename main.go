@@ -7,9 +7,14 @@ import (
 	"path/filepath"
 )
 
-const (
-	version = "0.4.1"
-	usage   = `loqui - Interactive Loki Query Builder
+// Populated at build time via goreleaser ldflags (-X main.version, etc.)
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+const usage = `loqui - Interactive Loki Query Builder
 
 Usage:
   loqui [options]
@@ -35,7 +40,6 @@ Examples:
   # Execute query immediately
   loqui -exec
 `
-)
 
 type Config struct {
 	UseCache  bool
@@ -70,7 +74,7 @@ func main() {
 	}
 
 	if showVersion {
-		fmt.Printf("loqui version %s\n", version)
+		fmt.Printf("loqui version %s (commit %s, built %s)\n", version, commit, date)
 		os.Exit(0)
 	}
 
