@@ -2,32 +2,13 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
-// Simple cache structure for reading
-type LabelCache struct {
-	Labels []string            `json:"labels"`
-	Values map[string][]string `json:"values"`
-}
-
 // getLabels retrieves available labels from Loki via logcli
 func getLabels(config *Config) ([]string, error) {
-	// Check cache first if enabled
-	if config.UseCache {
-		cached, err := loadCachedLabels(config.CacheDir)
-		if err == nil && cached != nil {
-			return cached.Labels, nil
-		}
-		// If cache fails, fall back to logcli
-	}
-
-	// Get from logcli with time range
 	return getLabelsFromLogCLI(config.LogCLICmd, config.TimeArgs)
 }
 
@@ -65,18 +46,6 @@ func parseLabelsOutput(output string) ([]string, error) {
 
 // getLabelValues retrieves values for a specific label
 func getLabelValues(config *Config, label string) ([]string, error) {
-	// Check cache first if enabled
-	if config.UseCache {
-		cached, err := loadCachedLabels(config.CacheDir)
-		if err == nil && cached != nil {
-			if values, ok := cached.Values[label]; ok {
-				return values, nil
-			}
-		}
-		// If cache fails, fall back to logcli
-	}
-
-	// Get from logcli with time range
 	return getLabelValuesFromLogCLI(config.LogCLICmd, label, config.TimeArgs)
 }
 
@@ -110,28 +79,4 @@ func parseLabelValuesOutput(output string) ([]string, error) {
 	}
 
 	return values, nil
-}
-
-// loadCachedLabels loads labels from cache if available
-func loadCachedLabels(cacheDir string) (*LabelCache, error) {
-	cacheFile := filepath.Join(cacheDir, "labels.json")
-
-	// Check if cache file exists
-	if _, err := os.Stat(cacheFile); os.IsNotExist(err) {
-		return nil, fmt.Errorf("cache file not found")
-	}
-
-	// Read cache file
-	data, err := os.ReadFile(cacheFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read cache file: %w", err)
-	}
-
-	// Parse cache
-	var cache LabelCache
-	if err := json.Unmarshal(data, &cache); err != nil {
-		return nil, fmt.Errorf("failed to parse cache: %w", err)
-	}
-
-	return &cache, nil
 }

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 // Populated at build time via goreleaser ldflags (-X main.version, etc.)
@@ -22,7 +21,6 @@ Usage:
 Options:
   -help        Show this help message
   -version     Show version
-  -cache       Enable cache usage (default: disabled)
   -exec        Execute the command immediately
 
 Environment:
@@ -34,16 +32,11 @@ Examples:
   export LOKI_ADDR=http://localhost:3100
   $(loqui)
 
-  # Build query using cache
-  $(loqui -cache)
-
   # Execute query immediately
   loqui -exec
 `
 
 type Config struct {
-	UseCache  bool
-	CacheDir  string
 	LogCLICmd string
 	TimeArgs  []string // Added to store time range arguments
 	Execute   bool     // Added for -exec option
@@ -53,13 +46,11 @@ func main() {
 	var (
 		showHelp    bool
 		showVersion bool
-		useCache    bool
 		execute     bool
 	)
 
 	flag.BoolVar(&showHelp, "help", false, "Show help")
 	flag.BoolVar(&showVersion, "version", false, "Show version")
-	flag.BoolVar(&useCache, "cache", false, "Enable cache usage")
 	flag.BoolVar(&execute, "exec", false, "Execute the command immediately")
 
 	flag.Usage = func() {
@@ -88,8 +79,6 @@ func main() {
 	}
 
 	config := &Config{
-		UseCache:  useCache,
-		CacheDir:  getDefaultCacheDir(),
 		LogCLICmd: "logcli",
 		TimeArgs:  []string{}, // Initialize as empty, will be set in InteractiveQueryBuilder
 		Execute:   execute,
@@ -100,20 +89,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-// getDefaultCacheDir returns the default cache directory following XDG Base Directory specification
-func getDefaultCacheDir() string {
-	// First, check XDG_CACHE_HOME
-	if xdgCache := os.Getenv("XDG_CACHE_HOME"); xdgCache != "" {
-		return filepath.Join(xdgCache, "loqui")
-	}
-
-	// Fall back to ~/.cache
-	if homeDir, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(homeDir, ".cache", "loqui")
-	}
-
-	// Last resort fallback
-	return filepath.Join(os.TempDir(), "loqui-cache")
 }

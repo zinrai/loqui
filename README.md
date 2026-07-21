@@ -134,9 +134,6 @@ $ loqui -exec | grep ERROR
 
 # Use with pager
 $ loqui -exec | less
-
-# Use with cache for faster label selection
-$ loqui -cache -exec
 ```
 
 ## Time Format Support
@@ -152,7 +149,6 @@ Instead of remembering RFC3339 format, use natural formats:
 ```bash
 -help        Show help message
 -version     Show version
--cache       Enable label cache (faster but might show stale labels)
 -exec        Execute the command immediately
 ```
 
@@ -164,16 +160,6 @@ Instead of remembering RFC3339 format, use natural formats:
 4. **Operator Support**: Not just equality - supports `!=`, `=~`, and `!~` for advanced queries
 5. **Line Filters**: Optional - press Enter to skip
 6. **Command Generation or Execution**: Outputs a ready-to-run `logcli` command or executes it directly with `-exec`
-
-## Using Cache for Label and Label value
-
-If you have many labels and values, enable caching for faster selection:
-
-```bash
-$ loqui -cache
-```
-
-Note: Cache is read from `~/.cache/loqui/labels.json` if it exists. Use a [loki-index-dump](https://github.com/zinrai/loki-index-dump) to manage the cache.
 
 ## Notes
 
