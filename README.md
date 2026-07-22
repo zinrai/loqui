@@ -34,13 +34,7 @@ Working with Loki's `logcli` is powerful but comes with significant cognitive ov
 - Sensible defaults - just press Enter to skip optional features
 - Generating the correct `logcli` command or executing it directly with `-exec`
 
-## Installation
-
-```bash
-$ go install github.com/yourusername/loqui@latest
-```
-
-### Prerequisites
+## Prerequisites
 
 - [logcli](https://grafana.com/docs/loki/latest/query/logcli/)
 - [fzf](https://github.com/junegunn/fzf)
